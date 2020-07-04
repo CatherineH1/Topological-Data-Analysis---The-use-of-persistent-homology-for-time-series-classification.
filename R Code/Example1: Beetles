@@ -1,0 +1,172 @@
+---
+  title: "TDA - Time Series"
+output:
+  html_document: default
+word_document: default
+---
+  
+  ```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+#Libraries
+```{r}
+#ODE 
+library(deSolve)
+#Graphs and Data Manipulation
+library(tidyverse)
+library(data.table)
+#Confusion Matrix
+library(caret) 
+#Persistent Homology
+library(nonlinearTseries)
+library(TDAstats)
+#Betti Numbers
+library(matrixStats)
+```
+
+
+
+#Create Aperiodic Time Series 
+```{r}
+Time_Series_Data<- data.frame()
+for (i in 1:200){
+  parameters2 <- c(b = 7.48, c_ea = 0.009, c_pa = 0.004, c_el = 0.012, u_p = 0, u_l = 0.267, u_a = 0.96)
+  state2 <- c(L = sample(2:100,1), P = sample(2:100,1), A = sample(2:100,1))
+  beetles2<-function(t, state, parameters) {
+    with(as.list(c(state, parameters)),{
+      
+      L1 <- b * A * exp((-c_el * L) - (c_ea * A))
+      P1 <- L * (1 - u_l) 
+      A1 <- (P * exp(-c_pa * A) + A * (1 - u_a)) 
+      
+      
+      list(c(L1, P1, A1))
+    }) 
+  }
+  
+  Aperiodic_i <- ode(y = state2, times = seq(0, 200), func = beetles2, parms = parameters2, method = "iteration")
+  
+  aperiodic <- as.data.frame(Aperiodic_i) %>% select(A)
+  transposeAperiodic<-t(aperiodic)
+  Time_Series_Data <- rbind.data.frame(transposeAperiodic,Time_Series_Data)  
+}
+```
+
+
+
+#Create Stable Time series
+```{r}
+for (i in 1:200){
+  parameters1 <- c(b = 7.48, c_ea = 0.009, c_pa = 0.004, c_el = 0.012, u_p = 0, u_l = 0.267, u_a = 0.73)
+  state1 <- c(L = sample(2:100,1), P = sample(2:100,1), A = sample(2:100,1))
+  beetles1<-function(t, state, parameters) {
+    with(as.list(c(state, parameters)),{
+      
+      L1 <- b * A * exp((-c_el * L) - (c_ea * A))
+      P1 <- L * (1 - u_l) 
+      A1 <- (P * exp(-c_pa * A) + A * (1 - u_a)) 
+      
+      
+      list(c(L1, P1, A1))
+    }) 
+  }
+  
+  Stable_i <- ode(y = state1, times = seq(0, 200), func = beetles1, parms = parameters1, method = "iteration")
+  
+  stable <- as.data.frame(Stable_i) %>% select(A)
+  transposeStable<-t(stable)
+  Time_Series_Data <- rbind.data.frame(transposeStable,Time_Series_Data)
+}
+```
+
+
+
+#Rename rows so we can identify time series as stable or aperiodic
+```{r}
+(setattr(Time_Series_Data, "row.names", c(rep("Stable",200),rep("Aperiodic",200))))
+```
+
+
+#K-Means Clustering
+```{r}
+set.seed(250)
+kmtotal <- kmeans(Time_Series_Data, 2, iter.max = 10, nstart = 1)
+```
+
+
+#Confusion Matrix k-means clustering
+```{r}
+km_clusters <- kmtotal$cluster
+correct <- rep(c("1","2"), each=200)
+cfm <- table(correct,km_clusters)
+cfm
+```
+
+
+#Analysis of k-means clustering results
+```{r}
+TP <- cfm[1,1]
+FN <- cfm[1,2]
+FP <- cfm[2,1]
+TN <- cfm[2,2]
+Recall <- TP/(TP+FN)
+Specificity <- TN/(TN+FP)
+Precision <- TP/(TP+FP)
+Negative_predictive_value <- TP/(TP+FP)
+Fall_out <- FP/(FP+TN)
+False_discovery_rate <- FP/(FP+TP)
+Accuracy <- (TP+TN)/(TP+TN+FP+FN)
+F1_Score <- (2*TP)/((2*TP)+FP+FN)
+MCC <- (TP*TN-FP*FN)/sqrt((TP+FP)*(TP+FN)*(TN+FP)*(TN+FN))
+```
+
+#Calculate persistent homolgy of stable time series
+```{r}
+pers_stable <- data.frame()
+for (i in 1:200){
+  x<- data.matrix(Time_Series_Data[i,])
+  a<- buildTakens(x,2,3)
+  hom <- calculate_homology(a,return_df = TRUE)
+  hom <- hom %>%
+    mutate(persistence = death-birth) %>%
+    mutate(persistent = ifelse(persistence > max(persistence)-0.00001, 1,0))
+  hom_matrix <- data_frame(hom) %>% select(dimension, persistent)
+  hom_matrix <- as.data.frame(hom_matrix) 
+  p1 <- hom_matrix[hom_matrix$persistent == '1',] 
+  pers_stable <- rbind.data.frame(pers_stable,p1) 
+}
+```
+#Sort by correct or incorrect classification for stable time series
+check_stable <- pers_stable[pers_stable$dimension == 0,] 
+stable_correct_hom <- nrow(check_stable)
+stable_incorrect_hom <- 200 - stable_correct_hom
+
+```
+#Calculate persistent homolgy of aperiodic time series
+```{r}
+pers_aperiodic <- data.frame()
+for (i in 201:400){
+  x1<- data.matrix(Time_Series_Data[i,])
+  a1<- buildTakens(x1,2,3)
+  hom1 <- calculate_homology(a1,return_df = TRUE)
+  hom1 <- hom1 %>%
+    mutate(persistence = death-birth) %>%
+    mutate(persistent = ifelse(persistence > max(persistence)-0.00001, 1,0))
+  hom_matrix1 <- data_frame(hom1) %>% select(dimension, persistent)
+  hom_matrix1 <- as.data.frame(hom_matrix1) 
+  p2 <- hom_matrix1[hom_matrix1$persistent == '1',] 
+  
+  pers_aperiodic <- rbind.data.frame(pers_aperiodic,p2)  
+}
+```
+
+#Sort by correct or incorrect classification for aperiodic time series
+check_aperiodic <- pers_aperiodic[pers_aperiodic$dimension == 1,] 
+aperiodic_correct_hom <- nrow(check_aperiodic)
+aperiodic_incorrect_hom <- 200 - aperiodic_correct_hom
+```
+#Confusion Matrix persistent homology
+cfm_hom <-cbind(c(stable_correct_hom,aperiodic_incorrect_hom),c(stable_incorrect_hom,aperiodic_correct_hom))
+cfm_hom
+```
