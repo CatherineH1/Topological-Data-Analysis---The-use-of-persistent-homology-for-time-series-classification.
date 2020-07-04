@@ -2,4 +2,4 @@
 Topological Data Analysis (TDA) is a developing branch of data science which uses statistical learning and techniques from algebraic topology, such as persistent homology, to study data. Time series that arise in areas such as biology and finance can be very chaotic in nature and data analysis can be a challenging task due to the many difficulties that arise in understanding large, high-dimensional data that contains noise. TDA is an evolving tool that can be applied to complex systems with the aim of determining mathematical associations in the data by analysing properties that relate to the shape of the data. It provides a framework for analysing data that can gather information from large volumes of high-dimensional data, which is not dependent on the choice of metric and provides stability against noise.
 
 
-Please see https://catherineh1.github.io/Topological-Data-Analysis---The-use-of-persistent-homology-for-time-series-classification./#ConclusionMusical
+Please see https://catherineh1.github.io/Topological-Data-Analysis---The-use-of-persistent-homology-for-time-series-classification./
