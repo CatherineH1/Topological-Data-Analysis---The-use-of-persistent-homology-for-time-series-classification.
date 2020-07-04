@@ -1,1 +1,725 @@
+<!DOCTYPE html>
+<html>
+<link href="./Website/style.css" rel="stylesheet" type="text/css"/>
+<head>
+    <meta charset="utf-8"> 
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TDA - Persistent Homology</title>
+    <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+    <script id="MathJax-script" async
+          src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js">
+    </script>
+</head>
+<body>
+    
+    
 
+    <div id="mySidenav" class="sidebar">
+    <hr>
+    <a href="#intro">Introduction</a>
+    <hr>
+    <a href="#Analysis">First Example: Tribolium Beetle Populations</a>
+    <a href="#Beetles">Part 1: Construct time series</a>
+    <a href="#KMeans">Part 2: Analysis of time series</a>
+    <a href="#FirstConclusion">Part 3: Conclusion from first example </a>
+    <hr>
+    <a href="#Musical"> Second Example: Musical Instrument Classification </a>
+    <a href="#TimeSeriesMusical"> Part 1: Construct time series </a>
+    <a href="#AnalysisMusical"> Part 2: Analysis of time series </a>
+    <a href="#ConclusionMusical"> Part 3: Conclusion from second example </a>    
+    <hr>
+    <a href="#ConclusionEnd"> Overall Conclusion </a>
+    </div>
+
+
+<div class="content">
+    <div class="header"> 
+        <h1 style="color: black;">Topological Data Analysis - The use of persistent homology for time series classification.</h1> </div>
+
+    <div class='intro' id="intro">
+        <p> This website has been created as part of a six-week summer research project by NUI Galway Undergraduate Mathematics students Catherine Higgins, Matt O'Reilly and Paul Armstrong. We would like to acknowledge the support of the NUI Galway Summer Undergraduate Internship Programme 2020 and express our thanks to our supervisor Professor Graham Ellis for the expert guidance and assistance we received during this project. 
+        <h1><u>Introduction</u></h1>
+         Topological Data Analysis (TDA) is a developing branch of data science which uses statistical learning and techniques from algebraic topology, such as persistent homology, to study data. Time series that arise in areas such as biology and finance can be very chaotic in nature and data analysis can be a challenging task due to the many difficulties that arise in understanding large, high-dimensional data that contains noise. TDA is an evolving tool that can be applied to complex systems with the aim of determining mathematical associations in the data by analysing properties that relate to the shape of the data. It provides a framework for analysing data that can gather information from large volumes of high-dimensional data, which is not dependent on the choice of metric and provides stability against noise.  </p>
+        
+
+    <div id="Aim" class='Aim'>
+        <h1><u>Aim</u></h1>
+        <p> This project aims to introduce students of mathematics to the use of persistent homology for time series classification through two illustrative examples. We will investigate the usefulness and effectiveness of  persistent homology in comparison to more traditional methods such as k-means clustering to classify time series. Investigations will be conducted on data from flour beetle populations and musical instruments based on two recent research papers <a href="./Website/time-series-topology.pdf">"Persistent homology for time series and spatial data clustering" </a> - Cássio M.M. Pereira/Rodrigo F. de Mello and <a href="./Website/music-topology.pdf"> “Computational Topology Techniques for Characterizing Time-Series Data” </a> - Nicole Sanderson, Elliott Shugerman, Samantha Molnar, James D. Meiss, and
+Elizabeth Bradley - University of Colorado. </p> 
+    </div>
+        
+    <div id="Background_Reading" class='Background_Reading'>
+        <h1><u>Background</u></h1>
+        
+        <div id="TimeSeries">
+        <h3><u>What is a Time Series?</u></h3>
+        <p> A time series is a sequence of numerical data points that are measured at successive evenly spaced intervals of time and indexed in time order. Examples of time series include the continuous monitoring of a person’s heart rate, hourly readings of air temperature, daily closing price of a company stock, monthly rainfall data and yearly sales figures.
+        <br>
+
+        Time series are made up of four components:
+        <ol>
+            <li>Trend variations - The predictable long-term pattern of the time series.</li>
+            <li>Seasonal variations- Repeated behaviour in the data that occurs at regular intervals.</li>
+            <li>Cyclical variations - Occurs when a series follows an up and down pattern that is not seasonal. </li>
+            <li>Random variations – Do not fall under any of the above three classifications. </li>
+            </ol>
+        
+        <p> For background information on time series and relevant aspects of topology and statistical classification please consult the following links:  
+        <ul>
+            <li><a href="https://en.wikipedia.org/wiki/Time_series"> Time Series Data</a></li>
+            <li><a href="https://en.wikipedia.org/wiki/Takens%27s_theorem"> Takens Embedding Theorem</a></li>
+            <li><a href="https://en.wikipedia.org/wiki/Algebraic_topology"> Algebraic Topology</a></li>
+            <li><a href="https://en.wikipedia.org/wiki/Persistent_homology"> Persistent Homology</a></li>
+            <li><a href="https://en.wikipedia.org/wiki/Confusion_matrix">Confusion Matrix</a></li>
+
+        </p> 
+    </div>
+
+
+    <hr>
+    <div id="Analysis" class="Analysis" style="margin-top: 10px" >
+        <h1><u> </u></h1>
+       
+        
+    <div id="Beetles" class="Beetles">
+
+        <h1><u> First Example: Population growth analysis of Tribolium flour beetle.</u></h1>
+        <p>Cássio M.M. Pereira and Rodrigo F. de Mello’s paper "Persistent homology for time series and spatial data clustering" is concerned with analysing time series data and investigates, by means of three different examples, the use of persistent homology in comparison to k-means clustering.  </p>
+        <br>
+        <p> We focus on example 4.1 Population growth analysis of Tribolium flour beetle. Our aim was to recreate this example, using the same model used in the paper, in R. We wanted to investigate if we could classify time series data using persistent homology more effectively than k-means clustering and to compare our results to that of the paper.  </p>
+
+        <h2><u>Part 1: Construct time series.</u></h2>
+        <p>The following R Libraries were required in our analysis.</p>
+        <pre>
+            <code>
+#ODE 
+library(deSolve)
+
+#Graphs and Data Manipulation
+library(tidyverse)
+library(data.table)
+
+#Confusion Matrix
+library(caret) 
+
+#Persistent Homology
+library(nonlinearTseries)
+library(TDAstats)
+
+#Betti Numbers
+library(matrixStats)
+            </code>
+        </pre>
+
+        <p> First, we programmed a function to create 200 aperiodic time series and 200 stable time series. The same fixed parameters as outlined in the paper were used along with &mu;<sub>a</sub> = 0.73 for stable time series and &mu;<sub>a</sub> = 0.96 for aperiodic time series.
+        The starting value of larvae L<sub>t</sub>, pupae P<sub>t</sub> and adults A<sub>t</sub> for each time series was randomized.
+        The following equations were used to model the values of larvae, pupae and adult beetles respectively.</p>
+        
+        
+        <p> \begin{equation}
+            \begin{array}{l}
+            L_{t+1}=b \cdot A_{t} \cdot \exp \left(-c_{e a} A_{t}-c_{e \ell} L_{t}+E_{1 t}\right) \\
+            P_{t+1}=L_{t}\left(1-\mu_{\ell}\right) \exp \left(E_{2 t}\right) \\
+            A_{t+1}=\left(P_{t} \exp \left(-c_{p a} A_{t}\right)+A_{t}\left(1-\mu_{a}\right)\right) \exp \left(E_{3 t}\right)
+            \end{array}
+            \end{equation}
+        </p>        
+        </ol></p>
+        <p> Each time series was then converted to a row vector and appended to the data frame Time_Series_Data which contains all 400 time series required to do analysis.</p>
+        <br>
+        <div class="row">
+          <div class="column">
+            <img src="./Website/images/AperiodicTimeSeries.png" alt="Aperiodic Time Series" style="width: 100%">
+          </div>
+          <div class="column">
+            <img src="./Website/images/StableTimeSeries.png" alt="Stable Time Series" style="width: 100%">
+          </div>
+        </div>
+        </div>
+        <br>
+       <p> First, create 200 aperiodic time series.
+
+        <h3><u>Aperiodic Time Series</u></h3>
+        <pre>
+            <code>
+Time_Series_Data<- data.frame()
+for (i in 1:200){
+  parameters2 <- c(b = 7.48, c_ea = 0.009, c_pa = 0.004, c_el = 0.012, u_p = 0, u_l = 0.267, u_a = 0.96)
+
+  state2 <- c(L = sample(2:100,1), P = sample(2:100,1), A = sample(2:100,1))
+
+  beetles2<-function(t, state, parameters) {
+    with(as.list(c(state, parameters)),{
+
+      L1 <- b * A * exp((-c_el * L) - (c_ea * A))
+      P1 <- L * (1 - u_l) 
+      A1 <- (P * exp(-c_pa * A) + A * (1 - u_a)) 
+      
+      list(c(L1, P1, A1))
+    })
+  }
+
+
+Aperiodic_i <- ode(y = state2, times = seq(0, 200), func = beetles2, parms = parameters2, method = "iteration")
+  
+
+aperiodic <- as.data.frame(Aperiodic_i) %>% select(A)
+
+transposeAperiodic <- t(aperiodic) # Turns Column Vector into Row Vector
+
+Time_Series_Data <- rbind.data.frame(transposeAperiodic,Time_Series_Data) 
+}
+            </code>
+        </pre>
+        
+        <p> Next, create 200 stable time series.
+
+        <h3><u>Stable Time Series</u></h3>
+
+        <pre>
+            <code>
+for (i in 1:200){
+  parameters1 <- c(b = 7.48, c_ea = 0.009, c_pa = 0.004, c_el = 0.012, u_p = 0, u_l = 0.267, u_a = 0.73)
+
+  state1 <- c(L = sample(2:100,1), P = sample(2:100,1), A = sample(2:100,1))
+  
+  beetles1<-function(t, state, parameters) {
+    with(as.list(c(state, parameters)),{
+
+      L1 <- b * A * exp((-c_el * L) - (c_ea * A))
+      P1 <- L * (1 - u_l) 
+      A1 <- (P * exp(-c_pa * A) + A * (1 - u_a)) 
+      
+
+      list(c(L1, P1, A1))
+    }) 
+  }
+
+  
+  Stable_i <- ode(y = state1, times = seq(0, 200), func = beetles1, parms = parameters1, method = "iteration")
+  
+stable <- as.data.frame(Stable_i) %>% select(A)
+transposeStable<-t(stable)
+Time_Series_Data <- rbind.data.frame(transposeStable,Time_Series_Data)
+}
+            </code>
+        </pre>
+
+
+        <p>Now all 400 time series have been created, transposed into row vectors and added to the data frame Time_Series_Data which contains all 400 time series. </p>
+        <p> For ease of identification name each time series aperiodic or stable. </p>
+
+        <pre>
+            <code>
+(setattr(Time_Series_Data, "row.names", c(rep("Stable",200),rep("Aperiodic",200))))
+            </code>
+        </pre>
+
+        <div class="KMeans" id="KMeans">
+        <h2><u>Part 2: Analysis of time series.</u></h2>
+        <h3><u> K-means clustering</u></h3>
+
+        <p> The k-means clustering algorithm was used to show comparison between persistent homology and a more traditional classification method. Using the k-means clustering algorithm we attempt to correctly classify the time series data into two clusters: aperiodic and stable.</p>
+
+        <pre>
+            <code>
+set.seed(250)
+kmtotal <- kmeans(Time_Series_Data, 2, iter.max = 10, nstart = 1)
+
+#Confusion matrix
+km_clusters <- kmtotal$cluster
+correct <- rep(c("1","2"), each=200)
+cfm <- table(correct,km_clusters)
+
+            </code>
+        </pre>
+
+        <p> In order to analyse the results of the k-means clustering algorithm we create a confusion matrix which shows the number of true positives, true negatives, false positives, and false negatives.</p></div>
+       
+    
+     <div id="ConfusionMatrix" class="ConfusionMatrix" >
+        <p>
+        \begin{aligned}
+        &\begin{array}{rr}
+        \text {} & + & - \\
+        Stable & 200 & 0 \\
+        Aperiodic & 119 & 81
+        \end{array}
+        \end{aligned}
+        </p>
+    </div>
+
+    <p> From the confusion matrix above it can be seen that all 200 stable time series are correctly clustered. However, only 81 of the aperiodic time series are correctly classified.  </p>
+
+
+    <h3><u>Takens' Theorem</u></h3>
+
+        <div class="Taken">
+        <p> Let \(M\) be a compact \(C^2\) differentiable manifold of dimension \(m\).
+        Let \(\Phi: M \rightarrow M\) be a \(C^2\)  diffeomorphism and let \(\mu: M \rightarrow \mathbb{R}\) be any \(C^2\) map. It is a generic property that the mapping 
+        \begin{equation}
+        \Phi_{\phi, \mu}: M \rightarrow \mathbb{R}^{2 m+1}, x \mapsto\left(\mu(x), \mu \phi(x), \mu \phi^{2}(x), \ldots, \mu \phi^{2 m}(x)\right)
+        \end{equation}
+        is an embedding.</p>
+        </div>
+        <p> Takens’ embedding theorem states that we can reconstruct a time series considering time delays. A series can be reconstructed in phase space where m is the embedding dimension (the smallest dimension required to embed an object) and t the time delay. Thus, instead of analysing the series along time, we analyse its trajectory as a set of visited states in an m-dimensional Euclidean space. This is particularly useful to extract the topological behaviour we are interested in. </p>
+        <p> In the study of dynamical systems, a delay embedding theorem gives the conditions under which a chaotic dynamical system can be reconstructed from a sequence of observations of the state of a dynamical system. The reconstruction preserves the properties of the dynamical system that do not change under smooth coordinate changes (i.e., diffeomorphisms), but it does not preserve the geometric shape of structures in phase space. </p>
+        <p> The theorem motivates the idea of studying a time series x<sub>1</sub>, x<sub>2</sub>, x<sub>3</sub>, ...  by choosing some embedding dimension m and forming the sequence of m-dimensional vectors   v<sub>1</sub>=(x<sub>1</sub>, x<sub>2</sub>, ...,x<sub>m</sub>), v<sub>2</sub>=(x<sub>2</sub>, x<sub>3</sub>, ..., x<sub>m+1</sub>), v<sub>3</sub>=(x<sub>3</sub>, x<sub>4</sub>, ..., x<sub>m+2</sub>), ... Then the geometry of the m-dimensional vectors v<sub>1</sub>, v<sub>2</sub>, v<sub>3</sub>, ... can be studied using a range of techniques. One technique involves creating filtered simplicial complexes and applying  persistent homology to them. A filtered simplicial complex is just a sequence of inclusions K<sub>1</sub> >--> K<sub>2</sub> >--> K<sub>3</sub> >--> ... of simplicial complexes K<sub>i</sub>.
+        <div class="row">
+          <div class="column">
+            <img src="./Website/images/TakensEmbeddingAperiodic.png" alt="Takens Embedding of Aperiodic Time Series" style="width: 100%">
+          </div>
+          <div class="column">
+            <img src="./Website/images/TakensEmbeddingStable.png" alt="Takens Embedding of Stable Time Series" style="width: 100%">
+          </div>
+        </div>
+
+
+        <div class="PersistentHomology" id="PersistentHomology">
+    <h3><u> Simplicial Complexes</u></h3>
+
+    <p> A simplex is a generalization of the notion of a triangle or tetrahedron to arbitrary dimensions.
+            <ul>
+                <li>a 0-simplex is a point,</li>
+                <li>a 1-simplex is a line segment,</li>
+                <li>a 2-simplex is a triangle,</li>
+                <li>a 3-simplex is a tetrahedron,</li>
+            </ul>
+
+         </p>
+
+        <img src="./Website/images/simplices.png" class="center90 image-right" style="width: 100%;">
+        
+        <p> In topology and combinatorics, it is common to “glue together” simplices to form a <a href="https://en.wikipedia.org/wiki/Simplicial_complex">simplicial complex.</a> </p>
+        <p> A simplicial complex, as seen below, is a union of simplices satisfying certain conditions. </p>
+        
+        <img src="./Website/images/SimplicialComplex.png" class="center90 image-right" style="width: 100%;"> 
+        
+       
+    </div>
+
+    
+
+        <div id="BettiNumbers" class="BettiNumbers">
+        <h3> <u>Betti Numbers</u> </h3>
+        <p>In algebraic topology, Betti numbers are used to distinguish topological spaces based on the connectivity of n-dimensional simplicial complexes.</p>
+            <p>Betti number: B<sub>n</sub> = dim(ker(d<sub>n</sub>))-dim(image(d<sub>n+1</sub>)) </p>
+
+        Informally, the kth Betti number refers to the number of k-dimensional holes on a topological surface. The first few Betti numbers have the following definitions for 0-dimensional, 1-dimensional, and 2-dimensional simplicial complexes:
+        
+        
+        <ol>
+            <li>b<sub>0</sub> is the number of connected components</li>
+            <li>b<sub>1</sub> is the number of one-dimensional or "circular" holes </li>
+            <li>b<sub>2</sub> is the number of two-dimensional "voids" or "cavities" </li>
+            
+        </ol>
+            
+    </div>
+
+ 
+
+    <div class="PersistenceDiagram" id="PersistenceDiagram">
+        <h3><u>Persistent Homology: Bar Codes and Persistence Diagrams</u> </h3>
+        <p> To any simplicial complex K we can associate a homology vector space H<sub>n</sub>(K). To a filtered simplicial complex K<sub>1</sub> >--> K<sub>2</sub> >--> K<sub>3</sub> >--> ... we can associate a sequence of linear homomorphisms H<sub>n</sub>(K<sub>1</sub>) --> H<sub>n</sub>(K<sub>2</sub>) --> H<sub>n</sub>(K<sub>3</sub> ) --> ....  This sequence of linear homomorphisms can be fully captured using the language of persistent n-dimensional Betti numbers. </p>
+        <p> Persistent homology is a method for computing topological features of a space at different spatial resolutions. The space must first be represented as a simplicial complex. More persistent features are detected over a wide range of spatial scales and are deemed more likely to represent true features of the underlying space rather than noise. </p>
+        <p>A bar code is a visual representation of persistent homology. Long bars represent features and short bars represent noise. </p>
+        
+        
+       
+        <p> A persistence diagram is very similar to a barcode, it captures the birth and death of features. The x-coordinate of a point represents when that point was born and the y-coordinate represents when that feature died. Features that are short lived occur close to the 45 degree line, while more persistent features occur at a greater distance from the 45 degree line.  </p>
+         <p> If you would like more information about persistent homology please view this <a href="./Website/Ma342_OReilly_Armstrong.pdf">paper.</a></p>
+        <p> Aperiodic barcode and stable barcode. </p>
+
+        <div class="row">
+          <div class="column">
+            <img src="./Website/images/BarcodeAperiodic.png" alt="Aperiodic Persistence Diagram" style="width: 100%">
+          </div>
+          <div class="column">
+            <img src="./Website/images/BarcodeStable.png" alt="Stable Persistence Diagram" style="width: 100%">
+          </div>
+        </div>
+        
+        
+        <p> Aperiodic persistence diagram and stable persistence diagram.
+        
+        <div class="row">
+          <div class="column">
+            <img src="./Website/images/PersistenceDiagramAperiodic.png" alt="Aperiodic Persistence Diagram" style="width: 100%">
+          </div>
+          <div class="column">
+            <img src="./Website/images/PersistenceDiagramStable.png" alt="Stable Persistence Diagram" style="width: 100%">
+          </div>
+        </div>
+
+    </div>
+
+    <p> Next, we construct a Takens embedding and calculate persistent homology and Betti numbers for the stable time series. Then sort the data by correct and incorrect classifications.</p>
+
+    <pre>
+        <code>
+pers_stable <- data.frame()
+for (i in 1:200){
+    x<- data.matrix(Time_Series_Data[i,])
+    a<- buildTakens(x,2,3)
+
+    hom <- calculate_homology(a,return_df = TRUE)
+    hom <- hom %>%
+        mutate(persistence = death-birth) %>%
+        mutate(persistent = ifelse(persistence > max(persistence)-0.00001, 1,0))
+
+    hom_matrix <- data_frame(hom) %>% select(dimension, persistent)
+    hom_matrix <- as.data.frame(hom_matrix) 
+    p1 <- hom_matrix[hom_matrix$persistent == '1',] 
+    pers_stable <- rbind.data.frame(pers_stable,p1) 
+
+
+#Sort the data by correct and incorrect classifications        
+check_stable <- pers_stable[pers_stable$dimension == 0,]
+stable_correct_hom <- nrow(check_stable)
+stable_incorrect_hom <- 200 - stable_correct_hom
+        </code>
+    </pre>
+
+    <p>Do the same for the aperiodic time series.
+
+</p>
+
+    <pre>
+        <code>
+pers_aperiodic <- data.frame()
+for (i in 201:400){
+    x1<- data.matrix(Time_Series_Data[i,])
+    a1<- buildTakens(x1,2,3)
+    hom1 <- calculate_homology(a1,return_df = TRUE)
+    hom1 <- hom1 %>%
+    mutate(persistence = death-birth) %>%
+    mutate(persistent = ifelse(persistence > max(persistence)-0.00001, 1,0))
+    hom_matrix1 <- data_frame(hom1) %>% select(dimension, persistent)
+    hom_matrix1 <- as.data.frame(hom_matrix1) 
+    p2 <- hom_matrix1[hom_matrix1$persistent == '1',] 
+  
+    pers_aperiodic <- rbind.data.frame(pers_aperiodic,p2)  
+}
+
+    #Sort the data by correct and incorrect classifications
+    check_aperiodic <- pers_aperiodic[pers_aperiodic$dimension == 1,] 
+    aperiodic_correct_hom <- nrow(check_aperiodic)
+    aperiodic_incorrect_hom <- 200 - aperiodic_correct_hom
+
+        </code>
+    </pre>
+
+    
+
+    <p> We can analyse the results of persistent homology using a confusion matrix. This allows for easy comparison with k-means clustering. </p>
+
+    <pre>
+        <code>
+cfm_hom <-cbind(c(stable_correct_hom,aperiodic_incorrect_hom),c(stable_incorrect_hom,aperiodic_correct_hom))
+        </code>
+    </pre>
+
+    <div id="ConfusionMatrix" class="ConfusionMatrix" >
+        <p>
+        \begin{aligned}
+        &\begin{array}{rr}
+        \text {} & + & - \\
+        Stable & 200 & 0 \\
+        Aperiodic & 19 & 181
+        \end{array}
+        \end{aligned}
+        </p>
+    </div>
+    
+    <p> From the confusion matrix above it can be seen that all 200 stable time series and 181 of aperiodic time series are correctly clustered. </p>
+</div>
+
+ <div id="FirstConclusion" class="FirstConclusion">
+        <h2><u>Part 3: Conclusion from first example</u> </h2>
+        <p>Persistent homology is more effective at classifying the given time series data than k-means clustering. Both k-means clustering and persistent homology classify all 200 stable time series correctly. However, there is quite a significant difference when it comes to classifying aperiodic time series. K-means clustering only correctly classifies 81 aperiodic time series whereas persistent homology correctly classifies 181 aperiodic time series. This shows how effective persistent homology is over k-means clustering at classifying the given time series data </p>
+        <p> This example shows how effective topology can be and how it can be considered for use as an extra tool for statistics. </p>   
+        <p> Our full R code can be found <a href="https://github.com/MattO-Reilly/TDA-TimeSeriesAnalysis/blob/master/R%20Code/Example1:%20Beetles"> here.</a></li>
+        
+
+    </div>
+    <hr>
+    <div id="Musical" class="Musical">
+        <h1> <u>Second Example: Musical Instrument Classification</u></h1>
+        <div id="TimeSeriesMusical" class="TimeSeriesMusical">
+        <p> Another application of persistent homology can be seen in The University of Colorado paper “Computational Topology Techniques for Characterizing Time-Series Data” which analyses time series data and shows as an example how persistent homology can be used to classify notes from different musical instruments. </p>
+        <p> Our aim is to use this idea to try to correctly classify an instrument by its note. For our analysis we use two instruments: flute and clarinet. By taking samples of note A4 from each instrument we use persistent homology to try to correctly predict whether it is flute or clarinet. </p>
+        <h2><u> Part 1: Constructing the Time Series</u></h2>
+        <p> To carry out our analysis we had to generate time series data for flute and clarinet. We used the <a href="https://newt.phys.unsw.edu.au/music/">  University of New South Wales Music Science  </a> audio file bank for our instrument samples. For both flute and clarinet, we used note A4.  We imported the audio files into Audacity in order to analyse each instrument. The files were then processed through audacity and the sample data export function generated a time series for each note. The time series for both <a href="https://github.com/MattO-Reilly/TDA-TimeSeriesAnalysis/blob/master/R%20Code/Flute%20A%20full%20time%20series.csv">flute</a> and <a href="https://github.com/MattO-Reilly/TDA-TimeSeriesAnalysis/blob/master/R%20Code/Clarinet%20A%20full%20time%20series.csv">clarinet</a> were then exported to a CSV file and imported into R. 
+
+        </p>
+        <p>Below shows a sample audio file output from Audacity. The time series, as clearly seen in the track bar below, can be exported to a CSV file and imported into R.</p>
+        <img src="./Website/images/Audacity.png" style="width: 100%">
+        
+        </div> <!-- PART 1 Section Musical Instruments -->
+<div id="AnalysisMusical">
+    <h2><u> Part 2: Analysis of time series </u></h2>
+    <p>The following R Libraries were required.</p>
+        <pre>
+            <code>
+library(nonlinearTseries)
+library(TDAstats)
+library(tidyverse)
+library(data.table)
+            </code>
+        </pre>
+    <p> For each instrument we start by taking 30 sample time series that have random starting points and each being 1000 points long or roughly .05 seconds of the full time series. We start by computing the average B<sub>1</sub> number for the flute. Using the 30 samples, we construct a Takens embedding and calculate homology for each sample. We then record the number of one-dimensional holes for each sample and compute the average B<sub>1</sub> number for the flute. This will be used in the classification of our data.
+        </p>
+        <pre><code>
+#get average betti number for flute
+average_list_flute <- c()
+Flute_full_note <- read.csv("FluteAfull.csv")
+for (i in 1:30) {
+  ai <- sample(1:37999,1,replace = FALSE, prob = NULL)
+  bi <- ai + 1000
+  sample_sequence_ai <- Flute_full_note[ai:bi,]
+  
+  Flute_homology <- data.frame()
+  
+  flute_A4_matrix <- data.matrix(sample_sequence_ai)
+  tak <- buildTakens(flute_A4_matrix,2,3)
+  hom <- calculate_homology(tak,return_df = TRUE) 
+  hom_matrix <- calculate_homology(tak,return_df = FALSE) 
+  hom <- hom %>%
+    mutate(persistence = death-birth) %>%
+    mutate(persistent = ifelse(persistence > 0.029, 1,0))
+  hom_matrix <- data.frame(hom) %>% select(dimension, persistent)
+  hom_matrix <- as.data.frame(hom_matrix) 
+  p1 <- hom_matrix[hom_matrix$persistent == '1',] 
+  Flute_homology<-rbind.data.frame(Flute_homology,p1)
+  avg <- nrow(Flute_homology)
+  average_list_flute <- append(average_list_flute,avg)
+}
+
+
+avg_betti_number_flute <- sum(average_list_flute)/length(average_list_flute)
+
+        </code></pre>
+
+<p> The average B<sub>1</sub> number for flute is 3. </p>
+
+    <div class="row">
+          <div class="column">
+            <img src="./Website/images/flutetakens.png" alt="Takens Embedding of Flute" style="width: 100%">
+          </div>
+          <div class="column">
+            <img src="./Website/images/flutebarcode.png" alt="Persistence barcode of Flute" style="width: 100%">
+          </div>
+    </div>
+    
+    <p> Next, we repeat the same steps to calculate the average B<sub>1</sub> number for the clarinet.</p>
+    <pre><code>
+#clarinet
+average_list_clarinet <- c()
+Clarinet_full_note <- read.csv("ClarinetAfull.csv")
+for (i in 1:30) {
+  ai2 <- sample(1:95000,1,replace = FALSE, prob = NULL)
+  bi2 <- ai2 + 1000
+  sample_sequence_ai2 <- Clarinet_full_note[ai2:bi2,]
+  
+  Clarinet_homology <- data.frame()
+  
+  Clarinet_A4_matrix <- data.matrix(sample_sequence_ai2)
+  tak2 <- buildTakens(Clarinet_A4_matrix,2,3)
+  hom2 <- calculate_homology(tak2,return_df = TRUE) 
+  hom_matrix2 <- calculate_homology(tak2,return_df = FALSE) 
+  hom2 <- hom2 %>%
+    mutate(persistence = death-birth) %>%
+    mutate(persistent = ifelse(persistence > 0.029, 1,0))
+  hom_matrix2 <- data.frame(hom2) %>% select(dimension, persistent)
+  hom_matrix2 <- as.data.frame(hom_matrix2) 
+  p2 <- hom_matrix2[hom_matrix2$persistent == '1',] 
+  Clarinet_homology<-rbind.data.frame(Clarinet_homology,p2)
+  avg2 <- nrow(Clarinet_homology)
+  average_list_clarinet <- append(average_list_clarinet,avg2)
+}
+
+
+avg_betti_number_clarinet <- sum(average_list_clarinet)/length(average_list_clarinet)
+
+    </code></pre>
+    <p> The average B<sub>1</sub> number for clarinet is 1. </p>
+    <div class="row">
+          <div class="column">
+            <img src="./Website/images/clarinettakens.png" alt="Takens Embedding of Flute" style="width: 100%">
+          </div>
+          <div class="column">
+            <img src="./Website/images/clarinetbarcode.png" alt="Persistence barcode of Clarinet" style="width: 100%">
+          </div>
+    </div>
+    
+    
+    <p>Now we have the average B<sub>1</sub> number for both flute and clarinet. </p>
+    <p> Next, we want to create a test data set consisting of 30 flute time series samples and 30 clarinet time series samples.
+        <pre>
+            <code>
+#make flute testing data
+Flute_full_note <- read.csv("FluteAfull.csv")
+Flute_test_data <- data.frame()
+for (i in 1:30) {
+  xi11 <- sample(1:37999,1,replace = FALSE, prob = NULL)
+  yi11 <- xi11 + 1000
+  sample_sequence_xi11 <- Flute_full_note[xi11:yi11,]
+  
+  Flute_dataframe <- as.data.frame(sample_sequence_xi11)
+  Flute_A_transpose <- t(Flute_dataframe)
+  Flute_test_data <- rbind.data.frame(Flute_A_transpose,Flute_test_data)
+}
+
+#make clarinet testing data
+Clarinet_full_note <- read.csv("ClarinetAfull.csv")
+Clarinet_test_data <- data.frame()
+for (i in 1:30) {
+  xi12 <- sample(1:94999,1,replace = FALSE, prob = NULL)
+  yi12 <- xi12 + 1000
+  sample_sequence_xi12 <- Clarinet_full_note[xi12:yi12,]
+  
+  CLarinet_dataframe <- as.data.frame(sample_sequence_xi12)
+  Clarinet_A_transpose <- t(CLarinet_dataframe)
+  Clarinet_test_data <- rbind.data.frame(Clarinet_A_transpose,Clarinet_test_data)
+}
+            </code>
+        </pre>
+        
+        <p>Join flute test data and clarinet test data into one data frame and label each row.</p>
+        <pre>
+            <code>
+test_data_set<- rbind(Flute_test_data,Clarinet_test_data)
+(setattr(test_data_set, "row.names", c(rep("Flute",30),rep("Clarinet",30))))
+            </code>
+        </pre>
+ 
+ <p>Using the test data set we attempt to classify each time series into either flute or clarinet. Starting with the first 30 rows corresponding to flute, if the B<sub>1</sub> number for each time series is close the average B<sub>1</sub> number for flute we computed earlier it is classified as flute.</p>
+        <pre>
+            <code>
+#analyse flute
+flute_assign <- c()
+clarinet_assign <- c()
+for (i in 1:30) {
+  test_flute_data_row <- test_data_set[i,]
+  
+  Flute_homology1 <- data.frame()
+  
+  test_flute_matrix <- data.matrix(test_flute_data_row)
+  tak11 <- buildTakens(test_flute_matrix,2,3)
+  hom11 <- calculate_homology(tak11,return_df = TRUE) 
+  hom_matrix11 <- calculate_homology(tak11,return_df = FALSE) 
+  hom11 <- hom11 %>%
+    mutate(persistence = death-birth) %>%
+    mutate(persistent = ifelse(persistence > 0.029, 1,0))
+  hom_matrix11 <- data.frame(hom11) %>% select(dimension, persistent)
+  hom_matrix11 <- as.data.frame(hom_matrix11) 
+  p11 <- hom_matrix11[hom_matrix11$persistent == '1',] 
+  Flute_homology1 <-rbind.data.frame(Flute_homology1,p11)
+  
+  avg <- nrow(Flute_homology1)
+  if (avg < 1.2){
+  clarinet_assign <- append(clarinet_assign,1)
+  } else {
+    flute_assign <- append(flute_assign,1)
+}
+}
+            </code>
+        </pre>
+        
+   <p>Compute the number of correct and incorrect flute classifications.</p>
+        <pre>
+            <code>
+correct_flute <-length(flute_assign)
+incorrect_flute <- 30-length(flute_assign)
+            </code>
+        </pre>  
+   
+        
+  <p>Again, using the test data set we attempt to classify each time series into either flute or clarinet. This time using the last 30 rows which corresponds to clarinet, if the B<sub>1</sub> number for each time series is close the average B<sub>1</sub> number for clarinet we computed earlier it is classified as clarinet.</p>
+        <pre>
+            <code>
+#analyse clarinet
+flute_assign1 <- c()
+clarinet_assign1 <- c()
+for (i in 31:60) {
+  test_clarinet_data_row <- test_data_set[i,]
+  
+  Clarinet_homology1 <- data.frame()
+  
+  test_clarinet_matrix <- data.matrix(test_clarinet_data_row)
+  tak12 <- buildTakens(test_clarinet_matrix,2,3)
+  hom12 <- calculate_homology(tak12,return_df = TRUE) 
+  hom_matrix12 <- calculate_homology(tak12,return_df = FALSE) 
+  hom12 <- hom12 %>%
+    mutate(persistence = death-birth) %>%
+    mutate(persistent = ifelse(persistence > 0.029, 1,0))
+  hom_matrix12 <- data.frame(hom12) %>% select(dimension, persistent)
+  hom_matrix12 <- as.data.frame(hom_matrix12) 
+  p12 <- hom_matrix12[hom_matrix12$persistent == '1',] 
+  Clarinet_homology1 <-rbind.data.frame(Clarinet_homology1,p12)
+  
+  avg1 <- nrow(Clarinet_homology1)
+  if (avg1 < 1.2){
+    clarinet_assign1 <- append(clarinet_assign1,1)
+  } else {
+    flute_assign1 <- append(flute_assign1,1)
+  }
+}
+            </code>
+        </pre>    
+ 
+  <p>Compute the number of correct and incorrect clarinet classifications.</p>
+        <pre>
+            <code>
+correct_clarinet <- length(clarinet_assign1)
+incorrect_clarinet <- 30 - length(clarinet_assign1)
+            </code>
+        </pre>
+         
+ 
+ <p>Create a confusion matrix to analyse the results.</p>
+        <pre>
+            <code>
+cfm <-cbind(c(correct_flute,incorrect_clarinet),c(incorrect_flute,correct_clarinet))
+            </code>
+        </pre>
+
+<div id="ConfusionMatrix" class="ConfusionMatrix" >
+        <p>
+        \begin{aligned}
+        &\begin{array}{rr}
+        \text {} & + & - \\
+        Flute & 24 & 6 \\
+        Clarinet & 0 & 30
+        \end{array}
+        \end{aligned}
+        </p>
+    </div>
+ 
+ <p> The confusion matrix above shows 24 flute samples correctly classified and all 30 clarinet samples correctly classified. </p>
+ 
+</div><!-- part 2 analysis Example Musical Instruments-->
+
+<!-- part 3 musical Instruments -->
+<div id="ConclusionMusical">
+    <h2><u>Part 3: Conclusion from second example.</u></h2>
+    <p> Persistent homology is quite effective at classifying the given time series data. </p>
+    <p>By constructing a Takens embedding, persistent homology can distinguish between flute and clarinet and it classifies all 30 clarinet time series correctly and 24 flute time series correctly.</p>
+    <p> In the paper the authors also tried using a classical classification involving fast Fourier transforms. The classical approach was not as successful as the persistent homology approach. </p>
+    <p> This example again shows how effective topology can be and how it can be considered for use as an extra tool for statistics. </p>
+     <p> Our full R code can be found <a href="https://github.com/MattO-Reilly/TDA-TimeSeriesAnalysis/blob/master/R%20Code/Example2:%20Musical_Instruments#L158"> here.</a></li>
+        
+    
+
+</div>
+
+<div id="ConclusionEnd">
+    <h1><u>Overall conclusion</u></h1>
+    <p> The investigations conducted on data from flour beetle populations and musical instruments based on two recent research papers "Persistent homology for time series and spatial data clustering" - Cássio M.M. Pereira/Rodrigo F. de Mello and “Computational Topology Techniques for Characterizing Time-Series Data” - University of Colorado show how persistent homology can be used for time series classification. </p>
+    <p>The usefulness and effectiveness of persistent homology at classifying time series can be clearly seen even in comparison to more traditional methods such as k-means clustering. Overall topology can be very effective and it can be considered for use as an extra tool for statistics. </p>
+    </div>
+
+</div> <!-- Main Body-->
+</body>
+</html>
