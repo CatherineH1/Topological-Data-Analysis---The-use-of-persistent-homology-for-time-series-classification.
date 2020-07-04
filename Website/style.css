@@ -1,0 +1,162 @@
+/*Body and Side Bar*/
+body{
+    background-color: white;
+    font-size: 1vw;
+}
+pre code {
+  background-color: #eee;
+  border: 1px solid #999;
+  display: block;
+  padding: 10px;
+  max-width: auto
+}
+h1{
+    color: #000000; 
+}
+/* The side navigation menu */
+.sidebar {
+  margin: 0;
+  padding: 0;
+  width: 200px;
+  background-color: #f1f1f1;
+  position: fixed;
+  height: 100%;
+  overflow: auto;
+}
+
+/* Sidebar links */
+.sidebar a {
+  display: block;
+  color: black;
+  padding: 16px;
+  text-decoration: none;
+}
+
+/* Active/current link */
+.sidebar a.active {
+  background-color: #4CAF50;
+  color: white;
+}
+
+/* Links on mouse-over */
+.sidebar a:hover:not(.active) {
+  background-color: #555;
+  color: white;
+}
+.center90 {
+  display: block;
+  margin-left: auto;
+  margin-right: auto;
+  width: 70%;
+  border:1px solid
+}
+.row {
+  display: flex;
+}
+
+.column {
+  flex: 30%;
+  padding: 5px;
+}
+
+
+/* Page content. The value of the margin-left property should match the value of the sidebar's width property */
+div.content {
+  margin-left: 200px;
+  padding: 1px 16px;
+}
+
+/* On screens that are less than 700px wide, make the sidebar into a topbar */
+@media screen and (max-width: 700px) {
+  .sidebar {
+    width: 100%;
+    height: auto;
+    position: relative;
+  }
+  .sidebar a {float: left;}
+  div.content {margin-left: 0;}
+}
+
+/* On screens that are less than 400px, display the bar vertically, instead of horizontally */
+@media screen and (max-width: 400px) {
+  .sidebar a {
+    text-align: center;
+    font-size: 2vw;
+    float: none;
+    height: auto;
+    position: relative;
+    }
+}
+@media screen and (max-width: 400px) {
+    .SidebarHeading {
+    display: none; }
+}
+/* If the screen size is 601px wide or more, set the font-size of <div> to 80px */
+@media screen and (min-width: 601px) {
+  div.header {
+    font-size: 2vw;
+  }
+}
+
+/* If the screen size is 600px wide or less, set the font-size of <div> to 30px */
+@media screen and (max-width: 600px) {
+  div.header {
+    font-size: 15px;
+  }
+}
+
+
+/*Sections of text*/
+.header{
+    background-image: url(./images/deok_timeseries.png);
+    background-size: cover;
+    background-position: center;
+    text-align: center;
+    padding: 30px;
+    color: black;
+    font-size: 1vw;
+    border: solid 2px black;
+    margin-bottom: 10px;
+}
+.intro{
+    display: inline-block;
+    border: solid 1px black;
+    padding: 10px
+}
+.Background_Reading{
+    display: inline-block;
+    width: 100%
+    overflow: scroll;
+}
+.BettiNumbers{
+    display: inline-block;
+    width: 100%
+    overflow: scroll;
+}
+.PersistentHomology{
+    display: inline-block;
+    width: 100%
+    overflow: scroll;
+}
+.Taken{
+    border: solid 2px black;
+    padding: 10px;
+    page-break-after: always;
+    background-color: #eee;
+}
+.Analysis{
+    display: inline-block;
+    width: 100%
+    overflow: scroll;
+}
+.ConfusionMatrix{
+    border: solid 2px black;
+    padding: 10px;
+    background-color: #eee;
+    text-align: left;
+}
+.Beetles{
+    display: inline-block;
+    width: 100%
+    overflow: scroll;
+}
