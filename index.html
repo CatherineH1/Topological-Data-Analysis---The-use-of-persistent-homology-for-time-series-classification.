@@ -328,7 +328,6 @@ cfm <- table(correct,km_clusters)
         
        
         <p> A persistence diagram is very similar to a barcode, it captures the birth and death of features. The x-coordinate of a point represents when that point was born and the y-coordinate represents when that feature died. Features that are short lived occur close to the 45 degree line, while more persistent features occur at a greater distance from the 45 degree line.  </p>
-         <p> If you would like more information about persistent homology please view this <a href="./Website/Ma342_OReilly_Armstrong.pdf">paper.</a></p>
         <p> Aperiodic barcode and stable barcode. </p>
 
         <div class="row">
@@ -439,7 +438,7 @@ cfm_hom <-cbind(c(stable_correct_hom,aperiodic_incorrect_hom),c(stable_incorrect
         <h2><u>Part 3: Conclusion from first example</u> </h2>
         <p>Persistent homology is more effective at classifying the given time series data than k-means clustering. Both k-means clustering and persistent homology classify all 200 stable time series correctly. However, there is quite a significant difference when it comes to classifying aperiodic time series. K-means clustering only correctly classifies 81 aperiodic time series whereas persistent homology correctly classifies 181 aperiodic time series. This shows how effective persistent homology is over k-means clustering at classifying the given time series data </p>
         <p> This example shows how effective topology can be and how it can be considered for use as an extra tool for statistics. </p>   
-        <p> Our full R code can be found <a href="https://github.com/MattO-Reilly/TDA-TimeSeriesAnalysis/blob/master/R%20Code/Example1:%20Beetles"> here.</a></li>
+        <p> Our full R code can be found <a href="https://github.com/CatherineH1/Topological-Data-Analysis---The-use-of-persistent-homology-for-time-series-classification./blob/master/R%20Code/Example1:%20Beetles"> here.</a></li>
         
 
     </div>
@@ -450,7 +449,7 @@ cfm_hom <-cbind(c(stable_correct_hom,aperiodic_incorrect_hom),c(stable_incorrect
         <p> Another application of persistent homology can be seen in The University of Colorado paper “Computational Topology Techniques for Characterizing Time-Series Data” which analyses time series data and shows as an example how persistent homology can be used to classify notes from different musical instruments. </p>
         <p> Our aim is to use this idea to try to correctly classify an instrument by its note. For our analysis we use two instruments: flute and clarinet. By taking samples of note A4 from each instrument we use persistent homology to try to correctly predict whether it is flute or clarinet. </p>
         <h2><u> Part 1: Constructing the Time Series</u></h2>
-        <p> To carry out our analysis we had to generate time series data for flute and clarinet. We used the <a href="https://newt.phys.unsw.edu.au/music/">  University of New South Wales Music Science  </a> audio file bank for our instrument samples. For both flute and clarinet, we used note A4.  We imported the audio files into Audacity in order to analyse each instrument. The files were then processed through audacity and the sample data export function generated a time series for each note. The time series for both <a href="https://github.com/MattO-Reilly/TDA-TimeSeriesAnalysis/blob/master/R%20Code/Flute%20A%20full%20time%20series.csv">flute</a> and <a href="https://github.com/MattO-Reilly/TDA-TimeSeriesAnalysis/blob/master/R%20Code/Clarinet%20A%20full%20time%20series.csv">clarinet</a> were then exported to a CSV file and imported into R. 
+        <p> To carry out our analysis we had to generate time series data for flute and clarinet. We used the <a href="https://newt.phys.unsw.edu.au/music/">  University of New South Wales Music Science  </a> audio file bank for our instrument samples. For both flute and clarinet, we used note A4.  We imported the audio files into Audacity in order to analyse each instrument. The files were then processed through audacity and the sample data export function generated a time series for each note. The time series for both <a href="https://github.com/CatherineH1/Topological-Data-Analysis---The-use-of-persistent-homology-for-time-series-classification./blob/master/R%20Code/FluteAfull.csv">flute</a> and <a href="https://github.com/CatherineH1/Topological-Data-Analysis---The-use-of-persistent-homology-for-time-series-classification./blob/master/R%20Code/ClarinetAfull.csv">clarinet</a> were then exported to a CSV file and imported into R. 
 
         </p>
         <p>Below shows a sample audio file output from Audacity. The time series, as clearly seen in the track bar below, can be exported to a CSV file and imported into R.</p>
@@ -708,7 +707,7 @@ cfm <-cbind(c(correct_flute,incorrect_clarinet),c(incorrect_flute,correct_clarin
     <p>By constructing a Takens embedding, persistent homology can distinguish between flute and clarinet and it classifies all 30 clarinet time series correctly and 24 flute time series correctly.</p>
     <p> In the paper the authors also tried using a classical classification involving fast Fourier transforms. The classical approach was not as successful as the persistent homology approach. </p>
     <p> This example again shows how effective topology can be and how it can be considered for use as an extra tool for statistics. </p>
-     <p> Our full R code can be found <a href="https://github.com/MattO-Reilly/TDA-TimeSeriesAnalysis/blob/master/R%20Code/Example2:%20Musical_Instruments#L158"> here.</a></li>
+     <p> Our full R code can be found <a href="https://github.com/CatherineH1/Topological-Data-Analysis---The-use-of-persistent-homology-for-time-series-classification./blob/master/R%20Code/Example2:%20Musical_Instruments"> here.</a></li>
         
     
 
